@@ -1,0 +1,15 @@
+#include "dstructs.h"
+
+
+
+
+
+
+
+
+int main(int argc, char **args) {
+
+  /* Create the producer */
+  producer prod = pro_init();
+  return 0;
+}

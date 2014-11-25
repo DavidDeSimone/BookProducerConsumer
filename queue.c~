@@ -1,0 +1,13 @@
+#include "queue.h"
+
+bo_queue bo_queue_init() {
+  bo_queue queue = malloc(sizeof(struct bo_queue));
+  
+  /* Create the empty order list */
+  queue->list = list_init();
+  queue->size = 0;
+
+  /* Initalize mutex and condition variables */
+  pthread_mutex_init (&queue->mutex, 0);
+
+}
