@@ -1,7 +1,27 @@
 #include "dstructs.h"
+#include "bookstore.h"
 #include <stdio.h>
 
 
+str_array read_cats(char *cat_input) {
+
+  return NULL;
+}
+
+customer* read_cus(char *dbase_input) {
+
+  return NULL;
+}
+
+
+consumer* spawn_consumers(producer prod) {
+
+
+  return NULL;
+}
+
+
+void process(void *arg) { }
 
 int main(int argc, char **args) {
   if(argc != 4) {
@@ -14,17 +34,19 @@ int main(int argc, char **args) {
   char *cat_input = args[3];
 
   /* Read the catagory file and create the catagory struct */
-  char **q_enum = read_cats(cat_input);
-
+  str_array q_enum = read_cats(cat_input);
+  
   /* Process the customer file and create the customer struct */
   customer *cus_arr = read_cus(dbase_input);
 
   /* Spawn the Producer */
+  producer prod = pro_init(q_enum);
 
   /* Spawn the consumers */
+  consumer* consumers = spawn_consumers(prod);
 
   /* For each consumer, spawn a thread and start processing data in the queue */
-
+  
 
   /* Begin to read over the assignment file. If possible, add order to the correct queue
    * and notify the corresponding consumer it has data. If that queue is full, hold until you can add it   

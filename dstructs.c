@@ -63,13 +63,13 @@ void cu_dec(customer cus) {
   free(cu);
 }
 
-producer pro_init() {
+producer pro_init(str_array array) {
   producer pro = malloc(sizeof(struct producer));
 
   /* Initalize all fields to NULL */
-  pro->q_enum = NULL;
+  pro->q_enum = array;
   pro->queues = NULL;
-  pro->num_consumers = 0;
+  pro->num_consumers = array->count;
 }
 
 void pro_dec(producer pro) {
@@ -81,10 +81,7 @@ void pro_dec(producer pro) {
 
   /* Free each string in the enumeration */
   /* and the corresponding queue in the queue array*/
-  for(i = 0; i < pro->num_consumers; i++) {
-    free(pro->q_enum[i]);
-    bo_queue_dec(pro->queues[i]);
-  }
+  str_array_dec(pro->q_enum);
 
   free(pro);
 }

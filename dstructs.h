@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "strarr.h"
 
 #define CAT_NOT_FOUND -1
 
@@ -31,10 +32,11 @@ typedef struct customer* customer;
  * After this, he will add orders to appropriate queues when each queue has an opening
  */
 struct producer {
-  char **q_enum;
+  str_array q_enum;
   bo_queue *queues;
   size_t num_consumers;
 };
+
 
 /* Consumers will process orders added to their repspective category queues
  * When they process an order, they will notify the producer, and he will add another 
@@ -42,7 +44,11 @@ struct producer {
  */
 struct consumer {
   char *category;
+  bo_queue queue;
   int cat_id;
+
+  str_array comp_orders;
+  str_array rej_orders;
 };
 
 typedef struct consumer* consumer;
@@ -50,8 +56,8 @@ typedef struct consumer* consumer;
 /* Struct constructors */
 book_order bo_init(char *title, int id, char *category);
 customer cu_init(char *name, int id, int c_limit);
-producer pro_init();
-consumer con_init(char **cats, char *category);
+producer pro_init(str_array q_enum);
+consumer con_init(char **cats, char *category, bo_queue queue);
 
 /* Struct deconstructors */
 void bo_dec(book_order order);
