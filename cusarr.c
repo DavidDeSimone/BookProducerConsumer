@@ -71,7 +71,7 @@ int cus_inc_count(cus_array arr) {
   }
 
   pthread_mutex_lock(&arr->size_mutex);
-  arr->count++;
+  arr->count += 1;
   pthread_mutex_unlock(&arr->size_mutex);
 
   return 0;

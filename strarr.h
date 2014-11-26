@@ -21,6 +21,7 @@ void strs_dec(char **strs, size_t count);
 int str_array_add(str_array arr, char *str);
 size_t str_array_get_size(str_array arr);
 int str_array_inc_size(str_array arr);
+char* str_array_get(str_array arr, int i);
 
 
 #endif

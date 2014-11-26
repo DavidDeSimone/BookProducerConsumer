@@ -1,5 +1,7 @@
 #include "bookstore.h"
 
+#define DEBUG 1
+
 str_array read_cats(char *cat_input) {
   FILE *input;
   char *line = NULL;
@@ -38,6 +40,7 @@ str_array read_cats(char *cat_input) {
   return ret;
 }
 
+//TODO, don't add customers if they already have ID in DB
 cus_array read_cus(char *dbase_input) {
   FILE *input;
   char *line = NULL;
@@ -86,10 +89,15 @@ cus_array read_cus(char *dbase_input) {
     }
 
     id = atoi(id_s);
-    c_limit = atoi(c_limit_s);
+    c_limit = atof(c_limit_s);
 
     /* Create the customer object */
     customer to_add = cu_init(name, id, c_limit);
+
+
+    #ifdef DEBUG
+    printf("Added customer %s %d %d\n", name, id, c_limit);
+    #endif
 
     /* Add it to the list */
     int i = 0;
@@ -104,18 +112,61 @@ cus_array read_cus(char *dbase_input) {
   return ret;
 }
 
-
 consumer* spawn_consumers(producer prod) {
+  if(prod == NULL) {
+    return NULL;
+  }
 
-  return NULL;
+  /* Allocate memory for consumer array */
+  size_t size = prod->num_consumers;
+  consumer* con_array = malloc(size * sizeof(consumer));
+  int i;
+
+  for(i = 0; i < size; i++) {
+    /* Create a consumer struct */
+    str_array cats = str_array_init();
+    char *cat = str_array_get(prod->q_enum, i);
+    bo_queue queue = prod->queues[i];
+
+
+    #ifdef DEBUG
+    printf("Consumer spanwed for category %s\n", cat);
+    #endif
+
+
+    consumer con = con_init(cats, cat, queue);
+    con_array[i] = con;
+  }
+  
+  return con_array;
 }
 
 
 void* process(void *consumer) { 
+
+  /* Wait for the consumer to alert you of an addition */
+  /* Take an object out from the queue */
+  /* Process the object */
+  /* Go back to waiting for the producer*/
+
+
   return NULL; 
 }
 
-void* read_data(void *producer) { 
+void* read_data(void *producer) {
+  /* Open the file */
+
+  /* For each line of the file */
+
+  /* Read the line and create the book order object */
+
+  /* Find the appropriate consumer object */
+
+  /* If the consumers queue is not full, add to the queue and alert the consumer */
+
+  /* If the consumers queue IS full, wait some time and try to add it again */
+
+ 
   return NULL; 
 }
 

@@ -24,7 +24,7 @@ typedef struct book_order* book_order;
 struct customer {
   char *name;
   int id;
-  int c_limit;
+  double c_limit;
 };
 
 typedef struct customer* customer;
@@ -61,7 +61,7 @@ typedef struct consumer* consumer;
 
 /* Struct constructors */
 book_order bo_init(char *title, int id, char *category);
-customer cu_init(char *name, int id, int c_limit);
+customer cu_init(char *name, int id, double c_limit);
 producer pro_init(str_array q_enum);
 consumer con_init(str_array cats, char *category, struct bo_queue *queue);
 

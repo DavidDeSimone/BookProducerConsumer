@@ -39,7 +39,7 @@ void bo_dec(book_order order) {
   free(order);
 }
 
-customer cu_init(char *name, int id, int c_limit) {
+customer cu_init(char *name, int id, double c_limit) {
   customer cu = malloc(sizeof(struct customer));
 
   /* Copy the name  */
@@ -65,12 +65,21 @@ void cu_dec(customer cus) {
 
 producer pro_init(str_array array) {
   producer pro = malloc(sizeof(struct producer));
-
+  int i;
+  
   /* Initalize all fields to NULL */
   pro->q_enum = array;
-  pro->queues = NULL;
   pro->num_consumers = array->count;
   pro->book_input = NULL;
+
+  /* Create an empty queue for each category */
+  bo_queue *queues = malloc(sizeof(bo_queue) * pro->num_consumers);
+
+  for(i = 0; i < pro->num_consumers; i++) {
+    queues[i] = bo_queue_init(DEFAULT_LIMIT);
+  }
+
+  pro->queues = queues;
 
   /* Initalize empty array of pthread types */
   pthread_t *tids = malloc(pro->num_consumers * sizeof(pthread_t));

@@ -69,6 +69,7 @@ int str_array_add(str_array arr, char *str) {
     strs[0] = cpy;
     str_array_inc_size(arr);
     
+    arr->strs = strs;
     pthread_mutex_unlock(&arr->mutex);
     return 0;
   }
@@ -116,7 +117,7 @@ int str_array_inc_size(str_array arr) {
   }
 
   pthread_mutex_lock(&arr->size_mutex);
-  arr->count++;
+  arr->count += 1;
   pthread_mutex_unlock(&arr->size_mutex);
 
   return 0;
