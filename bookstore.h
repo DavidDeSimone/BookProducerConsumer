@@ -1,3 +1,6 @@
+#ifndef BOOK_H
+#define BOOK_H
+
 #include "dstructs.h"
 #include "strarr.h"
 #include <pthread.h>
@@ -15,3 +18,5 @@ void process(void *arg);
 
 /* Given a producer with a non-null category list, spawns a consumer object for each category */
 consumer* spawn_consumers(producer prod);
+
+#endif

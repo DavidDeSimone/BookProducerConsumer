@@ -4,11 +4,15 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "dstructs.h"
+#include "list.h"
 
 #define TRUE 1
 #define FALSE 0
 
-#include "list.h"
+
+typedef struct book_order* book_order;
+typedef struct bo_list* bo_list;
 
 /* Queue data structure for a catagory of book orders */
 struct bo_queue {

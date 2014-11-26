@@ -13,6 +13,8 @@ bo_queue bo_queue_init(size_t limit) {
   pthread_mutex_init (&queue->mutex, 0);
   pthread_cond_init(&queue->space_available, 0);
   pthread_cond_init(&queue->data_available, 0);
+
+  return queue;
 }
 
 
@@ -34,14 +36,14 @@ void enqueue(bo_queue queue, book_order order) {
   pthread_mutex_lock(&queue->mutex);
   
   /* Check to see if the queue can take another item */
-  if(queue->size + 1 > limit) {
+  if(queue->size + 1 > queue->max_size) {
     pthread_mutex_unlock(&queue->mutex);
     return;
   }
 
   /* Create the book order link */
   bo_link toadd = link_init(order);
-  list_add(queue->list, toadd);
+  list_addr(queue->list, toadd);
   queue->size++;
 
   pthread_mutex_unlock(&queue->mutex);
@@ -59,7 +61,7 @@ book_order dequeue(bo_queue queue) {
   /* Get the current rear of the list */
   /* Remove the rear from the current list */
   book_order order = queue->list->rear->order;
-  list_rm(queue->list, queue->list->rear);
+  list_rr(queue->list);
   queue->size--;
 
   /* Unlock the queue */

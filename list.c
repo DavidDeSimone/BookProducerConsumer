@@ -90,7 +90,7 @@ int list_rr(bo_list list) {
   /* Iterate over the list */
   while(!insert) {
     /* If previous is not null, and we have the rear pointer */
-    if(link_eq(curr, list-rear) && prev != NULL) {
+    if(link_eq(curr, list->rear) && prev != NULL) {
       prev->next = curr->next;
       link_dec(curr);
       

@@ -8,6 +8,7 @@
 #define LIST_NULL -2 /* If the list is NULL */
 #define ITEM_NOT_FOUND -3 /* If an item asked is not found in the list */
 #define MALFORMED_LIST -4 /* If the list is not correctly formed */
+typedef struct book_order* book_order;
 
 struct bo_link {
   book_order order;
@@ -32,7 +33,7 @@ void link_dec(bo_link link);
 int list_addr(bo_list list, bo_link link);
 
 /* Removes the current rear of the linked list */
-int list_rr(bo_list list, bo_link link);
+int list_rr(bo_list list);
 
 /* Checks if two links are equal. Equality is defined as refering to the same link object (pointer comparison) */
 int link_eq(bo_link l1, bo_link l2);

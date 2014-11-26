@@ -1,4 +1,4 @@
-#include "strarr.c"
+#include "strarr.h"
 
 /* Thread safe implemenation of a 2D string array */
 
@@ -12,8 +12,6 @@ str_array str_array_init() {
 }
 
 void str_array_dec(str_array to_dec) {
-  int i;
-
   if(to_dec == NULL) {
     return;
   }
@@ -25,7 +23,7 @@ void str_array_dec(str_array to_dec) {
 
 void strs_dec(char **strs, size_t count) {
   int i;
-  for(i = 0; i < count, i++) {
+  for(i = 0; i < count; i++) {
     free(strs[i]);
   }
 }
@@ -70,7 +68,7 @@ int str_array_add(str_array arr, char *str, pthread_mutex_t mutex) {
   arr->strs = strs;
   arr->count++;
 
-  pthread_mutex_unlock(mutex);
+  pthread_mutex_unlock(&mutex);
   return 0;
 
 }

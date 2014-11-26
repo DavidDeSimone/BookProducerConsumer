@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "strarr.h"
+#include "queue.h"
+#include <string.h>
 
 #define CAT_NOT_FOUND -1
 
-
+typedef struct bo_queue* bo_queue;
 /* Struct representing a book order.
  */
 struct book_order {
@@ -37,6 +39,7 @@ struct producer {
   size_t num_consumers;
 };
 
+typedef struct producer* producer;
 
 /* Consumers will process orders added to their repspective category queues
  * When they process an order, they will notify the producer, and he will add another 
@@ -57,7 +60,7 @@ typedef struct consumer* consumer;
 book_order bo_init(char *title, int id, char *category);
 customer cu_init(char *name, int id, int c_limit);
 producer pro_init(str_array q_enum);
-consumer con_init(char **cats, char *category, bo_queue queue);
+consumer con_init(str_array cats, char *category, bo_queue queue);
 
 /* Struct deconstructors */
 void bo_dec(book_order order);
@@ -69,12 +72,12 @@ void con_dec(consumer con);
 int pro_add_queue(producer pro, bo_queue queue);
 
 /* Adds a category name to the category enumeration */
-int add_category(char **cats, char *cat_name);
+int add_category(str_array cats, char *cat_name);
 
 /* Searches for the category passed at category in the string array
  * If the string is found, returns the categories index
  * else it returns -1
  */
-int get_catid(char **cats, char *category);
+int get_catid(str_array cats, char *category);
 
 #endif

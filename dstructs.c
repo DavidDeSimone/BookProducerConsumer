@@ -55,12 +55,12 @@ customer cu_init(char *name, int id, int c_limit) {
 }
 
 void cu_dec(customer cus) {
-  if(cu_dec == NULL) {
+  if(cus == NULL) {
     return;
   }
   
-  free(cu->name);
-  free(cu);
+  free(cus->name);
+  free(cus);
 }
 
 producer pro_init(str_array array) {
@@ -70,11 +70,11 @@ producer pro_init(str_array array) {
   pro->q_enum = array;
   pro->queues = NULL;
   pro->num_consumers = array->count;
+
+  return pro;
 }
 
 void pro_dec(producer pro) {
-  int i;
-  
   if(pro == NULL) {
     return;
   }
@@ -86,7 +86,7 @@ void pro_dec(producer pro) {
   free(pro);
 }
 
-consumer con_init(char **cats, char *category) {
+consumer con_init(str_array cats, char *category, bo_queue queue) {
   consumer con = malloc(sizeof(struct consumer));
   int cat_id = -1;
 
@@ -101,13 +101,38 @@ consumer con_init(char **cats, char *category) {
     con->cat_id = cat_id;
   }
 
+  /* Set the queue */
+  con->queue = queue;
+  
+  /* Initalize the string array lists */
+  con->comp_orders = str_array_init();
+  con->rej_orders = str_array_init();
+
+  return con;
 }
 
 void con_dec(consumer con) {
   if(con == NULL) {
-    return NULL;
+    return;
   }
 
   free(con->category);
   free(con);
+}
+
+int get_catid(str_array cats, char *category) {
+  int i;
+
+  if(cats == NULL) {
+    return CAT_NOT_FOUND;
+  }
+
+  for(i = 0; i < cats->count; i++) {
+    if(strcmp(category, cats->strs[i]) == 0) {
+      return i;
+    }
+  }
+
+  /* Else entry not found */
+  return CAT_NOT_FOUND;
 }
