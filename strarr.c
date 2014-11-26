@@ -112,10 +112,12 @@ size_t str_array_get_size(str_array arr) {
 
 int str_array_inc_size(str_array arr) {
   if(arr == NULL) {
-    return NULL;
+    return -1;
   }
 
   pthread_mutex_lock(&arr->size_mutex);
   arr->count++;
   pthread_mutex_unlock(&arr->size_mutex);
+
+  return 0;
 }

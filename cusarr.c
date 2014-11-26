@@ -25,7 +25,7 @@ int cus_array_add(cus_array arr, customer toadd) {
   /* If the array is unitialized */
   if(arr->array == NULL) {
     arr->array = malloc(sizeof(customer *));
-    arr->array = toadd;
+    arr->array[0] = toadd;
     cus_inc_count(arr);
 
     pthread_mutex_unlock(&arr->mutex);
@@ -41,7 +41,7 @@ int cus_array_add(cus_array arr, customer toadd) {
     cpy[i] = arr->array[i];
   }
 
-  cpy[size] = to_add;
+  cpy[size] = toadd;
   cus_inc_count(arr);
 
   pthread_mutex_unlock(&arr->mutex);
@@ -77,7 +77,7 @@ int cus_inc_count(cus_array arr) {
   return 0;
 }
 
-customer* cus_get(cus_array arr, int i) {
+customer cus_get(cus_array arr, int i) {
   if(arr == NULL) {
     return NULL;
   }
@@ -93,4 +93,18 @@ customer* cus_get(cus_array arr, int i) {
   pthread_mutex_unlock(&arr->mutex);
 
   return to_ret;
+}
+
+customer cus_get_byid(cus_array arr, int id) {
+  int i;
+  size_t count = cus_get_count(arr);
+
+  for(i = 0; i < count; i++) {
+    customer cmp = cus_get(arr, i);
+    if(cmp->id == id) {
+      return cmp;
+    }
+  }
+
+  return NULL;
 }

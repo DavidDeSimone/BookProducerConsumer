@@ -2,9 +2,9 @@
 #define BOOK_H
 #define _GNU_SOURCE
 
-
 #include "dstructs.h"
 #include "strarr.h"
+#include "cusarr.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 str_array read_cats(char *cat_input);
 
 /* Reads in the user database and forms an array of customer objects */
-customer* read_cus(char *dbase_input);
+cus_array read_cus(char *dbase_input);
 
 /* Functions called for each consumer thread to start processing items in
  * their queue

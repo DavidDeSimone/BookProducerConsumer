@@ -38,9 +38,70 @@ str_array read_cats(char *cat_input) {
   return ret;
 }
 
-customer* read_cus(char *dbase_input) {
+cus_array read_cus(char *dbase_input) {
+  FILE *input;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  cus_array ret = cus_array_init();
 
-  return NULL;
+  input = fopen(dbase_input, "r");
+
+  if(input == NULL) {
+    printf("Error reading database file!\n");
+    return NULL;
+  }
+
+  /* Read the file line by line */
+  while((read = getline(&line, &len, input)) != -1) {
+    /* Strip the newlines */
+    char *pos;
+    if((pos=strchr(line, '\n')) != NULL) {
+      *pos = '\0';
+    }
+
+  
+    #ifdef DEBUG
+    printf("Line: %s\n", line);
+    #endif
+
+    /* Create the customer object by tokenizing */
+    char *token = NULL;
+    token = strtok(line, "|");
+
+    char *name = NULL;
+    char *id_s = NULL;
+    char *c_limit_s = NULL;
+
+    int id = -1;
+    int c_limit = -1;
+
+    name = token;
+    id_s = strtok(NULL, "|");
+    c_limit_s = strtok(NULL, "|");
+
+    if(name == NULL || id_s == NULL || c_limit_s == NULL) {
+      printf("Malformed input file!\n");
+      return NULL;
+    }
+
+    id = atoi(id_s);
+    c_limit = atoi(c_limit_s);
+
+    /* Create the customer object */
+    customer to_add = cu_init(name, id, c_limit);
+
+    /* Add it to the list */
+    int i = 0;
+    if((i = cus_array_add(ret, to_add)) != 0) {
+      printf("Error adding customer to list\n");
+      return NULL;
+    }
+
+  }
+
+
+  return ret;
 }
 
 
@@ -77,7 +138,7 @@ int main(int argc, char **args) {
   }
   
   /* Process the customer file and create the customer struct */
-  customer *cus_arr;
+  cus_array cus_arr;
   if((cus_arr = read_cus(dbase_input)) == NULL) {
     printf("Error processing customer database.\n");
     return -2;
@@ -97,7 +158,7 @@ int main(int argc, char **args) {
   /* For each consumer, spawn a thread and start processing data in the queue */
   int i;
   for(i = 0; i < prod->num_consumers; i++) {
-    pthread_create(&prod->tids[i], NULL, process, &consumers[i]);
+    pthread_create(&prod->tids[i], NULL, process, consumers[i]);
   }
 
   /* Begin to read over the assignment file. If possible, add order to the correct queue

@@ -2,7 +2,7 @@ CC = gcc
 OUTPUT = bookstore
 CFLAGS = -g -Wall
 LFLAGS = -pthread -I.
-OBJ = dstructs.o list.o queue.o strarr.o bookstore.o
+OBJ = dstructs.o list.o queue.o strarr.o bookstore.o cusarr.o
 
 all:$(OUTPUT)
 
@@ -23,6 +23,10 @@ strarr.o: strarr.c
 
 bookstore.o: bookstore.c
 	$(CC) $(CFLAGS) -o bookstore.o -c bookstore.c $(LFLAGS)
+
+cusarr.o: cusarr.c
+	$(CC) $(CFLAGS) -o cusarr.o -c cusarr.c $(LFLAGS)
+
 
 clean:
 	rm ./*.o ./bookstore
