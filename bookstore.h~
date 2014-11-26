@@ -1,0 +1,5 @@
+#include "dstructs.h"
+
+
+char** read_cats(char *cat_input);
+customer* read_cus(char *dbase_input);

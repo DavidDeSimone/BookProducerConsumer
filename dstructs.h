@@ -43,7 +43,6 @@ struct producer {
 struct consumer {
   char *category;
   int cat_id;
-
 };
 
 typedef struct consumer* consumer;
