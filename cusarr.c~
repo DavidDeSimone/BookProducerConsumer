@@ -1,0 +1,16 @@
+#include "cusarr.h"
+
+cus_array cus_array_init() {
+  cus_array ret = malloc(sizeof(struct cus_array));
+  ret->array = NULL;
+  ret->count = 0;
+  pthread_mutex_init(&ret->mutex, 0);
+
+  return ret;
+}
+
+void cus_array_dec(cus_array arr) {
+  //TODO
+
+
+}

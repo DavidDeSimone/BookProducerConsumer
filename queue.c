@@ -71,9 +71,24 @@ book_order dequeue(bo_queue queue) {
 } 
 
 int is_empty(bo_queue queue) {
+  pthread_mutex_lock(&queue->mutex);
+
+  int ret = FALSE;
   if(queue->size == 0) {
-    return TRUE;
+    ret = TRUE;
   } else {
-    return FALSE;
+    ret = FALSE;
   } 
+
+  pthread_mutex_unlock(&queue->mutex);
+  return ret;
+}
+
+size_t get_size(bo_queue queue) {
+
+  pthread_mutex_lock(&queue->mutex);
+  size_t size = queue->size;
+  pthread_mutex_unlock(&queue->mutex);
+
+  return size;
 }

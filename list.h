@@ -8,10 +8,9 @@
 #define LIST_NULL -2 /* If the list is NULL */
 #define ITEM_NOT_FOUND -3 /* If an item asked is not found in the list */
 #define MALFORMED_LIST -4 /* If the list is not correctly formed */
-typedef struct book_order* book_order;
 
 struct bo_link {
-  book_order order;
+  struct book_order *order;
   struct bo_link *next;
 };
 
@@ -23,7 +22,7 @@ struct bo_list {
 
 typedef struct bo_list* bo_list;
 
-bo_link link_init(book_order order);
+bo_link link_init(struct book_order *order);
 bo_list list_init();
 
 void list_dec(bo_list list);

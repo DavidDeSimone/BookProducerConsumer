@@ -49,4 +49,7 @@ book_order dequeue(bo_queue queue);
  */
 int is_empty(bo_queue queue);
 
+/* Returns the current size of the queue */
+size_t get_size(bo_queue queue);
+
 #endif

@@ -70,6 +70,11 @@ producer pro_init(str_array array) {
   pro->q_enum = array;
   pro->queues = NULL;
   pro->num_consumers = array->count;
+  pro->book_input = NULL;
+
+  /* Initalize empty array of pthread types */
+  pthread_t *tids = malloc(pro->num_consumers * sizeof(pthread_t));
+  pro->tids = tids;
 
   return pro;
 }
@@ -82,7 +87,7 @@ void pro_dec(producer pro) {
   /* Free each string in the enumeration */
   /* and the corresponding queue in the queue array*/
   str_array_dec(pro->q_enum);
-
+  
   free(pro);
 }
 
@@ -136,3 +141,17 @@ int get_catid(str_array cats, char *category) {
   /* Else entry not found */
   return CAT_NOT_FOUND;
 }
+
+int set_bookdb(producer prod, char *book_db) {
+  if(prod == NULL || book_db == NULL) {
+    return -1;
+  }
+
+  char *cpy = malloc((strlen(book_db) + 1) * sizeof(char));
+  strcpy(cpy, book_db);
+
+  prod->book_input = cpy;
+
+  return 0;
+}
+

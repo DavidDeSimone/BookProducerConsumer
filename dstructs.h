@@ -10,7 +10,7 @@
 
 #define CAT_NOT_FOUND -1
 
-typedef struct bo_queue* bo_queue;
+
 /* Struct representing a book order.
  */
 struct book_order {
@@ -35,7 +35,10 @@ typedef struct customer* customer;
  */
 struct producer {
   str_array q_enum;
-  bo_queue *queues;
+  struct bo_queue **queues;
+  char *book_input;
+
+  pthread_t *tids;
   size_t num_consumers;
 };
 
@@ -47,7 +50,7 @@ typedef struct producer* producer;
  */
 struct consumer {
   char *category;
-  bo_queue queue;
+  struct bo_queue *queue;
   int cat_id;
 
   str_array comp_orders;
@@ -60,7 +63,7 @@ typedef struct consumer* consumer;
 book_order bo_init(char *title, int id, char *category);
 customer cu_init(char *name, int id, int c_limit);
 producer pro_init(str_array q_enum);
-consumer con_init(str_array cats, char *category, bo_queue queue);
+consumer con_init(str_array cats, char *category, struct bo_queue *queue);
 
 /* Struct deconstructors */
 void bo_dec(book_order order);
@@ -69,7 +72,7 @@ void pro_dec(producer pro);
 void con_dec(consumer con);
 
 /* Add a category queue to a producer object */
-int pro_add_queue(producer pro, bo_queue queue);
+int pro_add_queue(producer pro, struct bo_queue *queue);
 
 /* Adds a category name to the category enumeration */
 int add_category(str_array cats, char *cat_name);
@@ -79,5 +82,8 @@ int add_category(str_array cats, char *cat_name);
  * else it returns -1
  */
 int get_catid(str_array cats, char *category);
+
+/* Sets the book database for the given producer */
+int set_bookdb(producer prod, char *book_db);
 
 #endif
