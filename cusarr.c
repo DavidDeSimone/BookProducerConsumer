@@ -24,7 +24,7 @@ int cus_array_add(cus_array arr, customer toadd) {
   
   /* If the array is unitialized */
   if(arr->array == NULL) {
-    arr->array = malloc(sizeof(customer *));
+    arr->array = malloc(sizeof(customer));
     arr->array[0] = toadd;
     cus_inc_count(arr);
 
@@ -35,7 +35,7 @@ int cus_array_add(cus_array arr, customer toadd) {
   /* Else copy the current array and add one */
   size_t size = cus_get_count(arr);
   int i;
-  customer *cpy = malloc((size + 1) * sizeof(customer *));
+  customer *cpy = malloc((size + 1) * sizeof(customer));
 
   for(i = 0; i < size; i++) {
     cpy[i] = arr->array[i];
@@ -44,13 +44,16 @@ int cus_array_add(cus_array arr, customer toadd) {
   cpy[size] = toadd;
   cus_inc_count(arr);
 
+  free(arr->array);
+  arr->array = cpy;
+  
   pthread_mutex_unlock(&arr->mutex);
   
   return 0;
 }
 
 size_t cus_get_count(cus_array arr) {
-  size_t toret;
+  size_t toret = 0;
   
   if(arr == NULL) {
     return 0;
@@ -82,20 +85,26 @@ customer cus_get(cus_array arr, int i) {
     return NULL;
   }
 
+  pthread_mutex_lock(&arr->mutex);
+  customer to_ret = NULL;
   size_t count = cus_get_count(arr);
 
   if(i < 0 || i >= count) {
     return NULL;
   }
 
-  pthread_mutex_lock(&arr->mutex);
-  customer to_ret = arr->array[i];
+  to_ret = arr->array[i];
   pthread_mutex_unlock(&arr->mutex);
 
   return to_ret;
 }
 
 customer cus_get_byid(cus_array arr, int id) {
+  if(arr == NULL) {
+    printf("Error, null list\n");
+    return NULL;
+  }
+
   int i;
   size_t count = cus_get_count(arr);
 

@@ -37,4 +37,6 @@ int list_rr(bo_list list);
 /* Checks if two links are equal. Equality is defined as refering to the same link object (pointer comparison) */
 int link_eq(bo_link l1, bo_link l2);
 
+void print_list(bo_list);
+
 #endif

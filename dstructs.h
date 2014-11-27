@@ -6,17 +6,21 @@
 #include <unistd.h>
 #include "strarr.h"
 #include "queue.h"
+#include "cusarr.h"
 #include <string.h>
 
 #define CAT_NOT_FOUND -1
+#define OVERSPEND -3
+#define CHARGE_SUC 0
 
-
+typedef struct cus_array* cus_array;
 /* Struct representing a book order.
  */
 struct book_order {
   char *title;
   int id;
   char *category;
+  double cost;
 };
 
 typedef struct book_order* book_order;
@@ -25,6 +29,13 @@ struct customer {
   char *name;
   int id;
   double c_limit;
+  double spent;
+
+  str_array comp_orders;
+  str_array rej_orders;
+
+
+  pthread_mutex_t mutex;
 };
 
 typedef struct customer* customer;
@@ -37,6 +48,7 @@ struct producer {
   str_array q_enum;
   struct bo_queue **queues;
   char *book_input;
+  struct consumer **consumers;
 
   pthread_t *tids;
   size_t num_consumers;
@@ -52,18 +64,21 @@ struct consumer {
   char *category;
   struct bo_queue *queue;
   int cat_id;
+  int isopen;
 
-  str_array comp_orders;
-  str_array rej_orders;
+  cus_array customers;
+
+  pthread_cond_t data_available;
+  pthread_mutex_t mutex;
 };
 
 typedef struct consumer* consumer;
 
 /* Struct constructors */
-book_order bo_init(char *title, int id, char *category);
+book_order bo_init(char *title, int id, char *category, double cost);
 customer cu_init(char *name, int id, double c_limit);
 producer pro_init(str_array q_enum);
-consumer con_init(str_array cats, char *category, struct bo_queue *queue);
+consumer con_init(str_array cats, char *category, struct bo_queue *queue, cus_array customers);
 
 /* Struct deconstructors */
 void bo_dec(book_order order);
@@ -85,5 +100,10 @@ int get_catid(str_array cats, char *category);
 
 /* Sets the book database for the given producer */
 int set_bookdb(producer prod, char *book_db);
+
+/* Increased the amount spend of the given customer */
+int spend(customer cu, double amount);
+
+int bo_eq(book_order o1, book_order o2);
 
 #endif

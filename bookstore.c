@@ -16,7 +16,6 @@ str_array read_cats(char *cat_input) {
     printf("Error, file %s not found!\n", cat_input);
     return NULL;
   }
-
   
   /* Read the file line by line */
   while((read = getline(&line, &len, input)) != -1) {
@@ -112,7 +111,7 @@ cus_array read_cus(char *dbase_input) {
   return ret;
 }
 
-consumer* spawn_consumers(producer prod) {
+consumer* spawn_consumers(producer prod, cus_array customers) {
   if(prod == NULL) {
     return NULL;
   }
@@ -134,7 +133,7 @@ consumer* spawn_consumers(producer prod) {
     #endif
 
 
-    consumer con = con_init(cats, cat, queue);
+    consumer con = con_init(cats, cat, queue, customers);
     con_array[i] = con;
   }
   
@@ -142,32 +141,231 @@ consumer* spawn_consumers(producer prod) {
 }
 
 
-void* process(void *consumer) { 
+void* process(void *cons) { 
+  consumer con = (consumer)cons;
 
-  /* Wait for the consumer to alert you of an addition */
-  /* Take an object out from the queue */
-  /* Process the object */
-  /* Go back to waiting for the producer*/
+  while(con->isopen) {
+
+    pthread_mutex_lock(&con->mutex);
+    /* Wait for the consumer to alert you of an addition */
+    pthread_cond_wait(&con->data_available, &con->mutex);
+    if(!con->isopen) break;
+
+    while(!is_empty(con->queue)) {
+      /* Take an object out from the queue */
+      book_order order = dequeue(con->queue);
+
+      #ifdef DEBUG
+      printf("Order Dequeued\n");
+      #endif
+
+      if(order != NULL) {
+	customer sucker = cus_get_byid(con->customers, order->id);
+	if(sucker == NULL) {
+	  printf("Error, sucker not found!, %d\n", order->id);
+	  return NULL;
+	}
+	
+	/* Process the object */
+	int result = spend(sucker, order->cost);
+	
+        #ifdef DEBUG
+	printf("Processed Order for %s by %s\n", sucker->name, order->title);
+        #endif
+
+
+	/* Update customer record for this transaction */
+
+	if(result == CHARGE_SUC) {
+	  double diff = sucker->c_limit - sucker->spent; 
+	  
+	  char zz[500];
+	  snprintf(zz, 500, "%s|%g|%g\n", order->title, order->cost, diff);
+       
+	  //printf("%s", dest);
+	  char *ptr = (char*)&zz;
+	  str_array_add(sucker->comp_orders, ptr);
+
+	} else {
+	  char zz[500];
+	  snprintf(zz, 500, "%s|%g\n", order->title, order->cost);
+
+	  char *ptr = (char*)&zz;
+	  str_array_add(sucker->rej_orders, ptr);
+
+	}
+       
+
+	/* Go back to waiting for the producer*/
+
+	bo_dec(order);
+    
+      }
+    }
+    pthread_mutex_unlock(&con->mutex);
+  }
+
+  return NULL; 
+}
+
+void* read_data(void *produ) {
+  producer prod = (producer)produ;
+  FILE *input;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  
+  /* Open the file */
+  if(prod->book_input == NULL) {
+    printf("Error, producer not properly instansiated. Please specify order file\n");
+    return NULL;
+  }
+
+  input = fopen(prod->book_input, "r");
+
+  if(input == NULL) {
+    printf("Error, file not found!\n");
+    return NULL;
+  }
+
+  /* For each line of the file */
+  while((read = getline(&line, &len, input)) != -1) {
+    /* Strip newline */
+    char *pos;
+    if((pos=strchr(line, '\n')) != NULL) {
+      *pos = '\0';
+    }
+
+    /* Read the line and create the book order object */
+    char *title = NULL;
+    char *id_s = NULL;
+    char *cost_s = NULL;
+    char *category = NULL;
+
+    int id = -1;
+    double cost = -1;
+
+
+    title = strtok(line, "|");
+    cost_s = strtok(NULL, "|");
+    id_s = strtok(NULL, "|");
+    category = strtok(NULL, "|");
+
+    id = atoi(id_s);
+    cost = atof(cost_s);
+
+    if(title == NULL || id_s == NULL || cost_s == NULL || category == NULL) {
+      printf("Error in processing book order!\n");
+      return NULL;
+    }
+
+    book_order order = bo_init(title, id, category, cost);
+
+    #ifdef DEBUG
+    printf("Created Order %s %d %s\n", title, id, category);
+    #endif
+
+    /* Find the appropriate consumer object */
+    int i;
+    consumer noted = NULL;
+    if((i = get_catid(prod->q_enum, category)) == -1) {
+      printf("Error, requested category not found!\n");
+      return NULL;
+    }
+    
+    noted = prod->consumers[i];
+
+    /* If the consumers queue is not full, add to the queue and alert the consumer */
+    //pthread_mutex_lock(&noted->mutex);
+    bo_queue queue = noted->queue;
+    if(!is_full(queue)) {
+      enqueue(queue, order);
+      pthread_cond_signal(&noted->data_available);
+      printf("Sending Signal...\n");
+    } else {
+      /* If the consumers queue IS full, wait some time and try to add it again */
+      while(TRUE) {
+	sleep(5);
+	if(!is_full(queue)) {
+	  enqueue(queue, order);
+	  pthread_cond_signal(&noted->data_available);
+	  break;
+	}
+      }
+    }
+    //pthread_mutex_unlock(&noted->mutex);
+  }
+ 
+
+  /* Wait for the consumers to consume */
+  /* When the entire order list is processed, do the following 
+   * For Each Consumer:
+   *    Signal "data available". This is to trigger threads blocked on this call
+   * Set the consumers isopen flag to false
+   * Join on the consumer thread
+   *
+   * Each consumer will run until its queue is empty and its isopen flag is set to false
+   * When all the consumers have joined, add up the total amount spent, and process the customer record array. 
+   * All consumers have the same master customer record array (which is a thread safe vector implementation) so selecting the pointer from the first consumer will be fine.
+   */
+  int j;
+  double spent = 0;
+  for(j = 0; j < prod->num_consumers; j++) {
+    pthread_cond_signal(&prod->consumers[j]->data_available);
+    prod->consumers[j]->isopen = 0;
+    pthread_join(prod->tids[j], 0);
+  }
+
+  for(j = 0; j < prod->consumers[0]->customers->count; j++) {
+    spent += cus_get(prod->consumers[0]->customers, j)->spent;
+  }
+
+
+  printf("Total amount earned for this round, %g\n", spent);
+  write_output(prod->consumers[0]->customers);
 
 
   return NULL; 
 }
 
-void* read_data(void *producer) {
-  /* Open the file */
+void write_output(cus_array customers) {
+  FILE *output;
+  output = fopen("output.txt", "w");
 
-  /* For each line of the file */
+  if(output == NULL) {
+    printf("Failed to write output file!\n");
+    return;
+  }
 
-  /* Read the line and create the book order object */
 
-  /* Find the appropriate consumer object */
+  int i;
+  for(i = 0; i < customers->count; i++) {
+    fprintf(output, "=== BEGIN CUSTOMER INFO ===\n");
+    customer cus = cus_get(customers, i);
 
-  /* If the consumers queue is not full, add to the queue and alert the consumer */
+    fprintf(output, "### BALANCE ###\n");
+    fprintf(output, "Customer name: %s\n", cus->name);
+    fprintf(output, "Customer id: %d\n", cus->id);
+    double diff = cus->c_limit - cus->spent;
+    fprintf(output, "Redmaining credit balance after all purchases (a dollar amount): %g\n", diff);
 
-  /* If the consumers queue IS full, wait some time and try to add it again */
+    fprintf(output, "### SUCCESSFUL ORDERS ###\n");
+    
+    int j;
+    for(j = 0; j < cus->comp_orders->count; j++) {
+      fprintf(output, "%s", str_array_get(cus->comp_orders, j));
+    }
+    
+    fprintf(output, "### REJECTED ORDERS ###\n");
+    int k;
+    for(k = 0; k < cus->rej_orders->count; k++) {
+      fprintf(output, "%s", str_array_get(cus->rej_orders, k));
+    }
 
- 
-  return NULL; 
+    fprintf(output, "\n");
+  }
+
+  fclose(output);
 }
 
 int main(int argc, char **args) {
@@ -189,7 +387,7 @@ int main(int argc, char **args) {
   }
   
   /* Process the customer file and create the customer struct */
-  cus_array cus_arr;
+  cus_array cus_arr = NULL;
   if((cus_arr = read_cus(dbase_input)) == NULL) {
     printf("Error processing customer database.\n");
     return -2;
@@ -204,7 +402,9 @@ int main(int argc, char **args) {
 
 
   /* Spawn the consumers */
-  consumer* consumers = spawn_consumers(prod);
+  consumer* consumers = spawn_consumers(prod, cus_arr);
+
+  prod->consumers = consumers;
 
   /* For each consumer, spawn a thread and start processing data in the queue */
   int i;
@@ -219,6 +419,5 @@ int main(int argc, char **args) {
   
 
   pthread_exit(0);
-  return 0;
 }
 

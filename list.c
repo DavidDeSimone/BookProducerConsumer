@@ -47,10 +47,16 @@ int list_addr(bo_list list, bo_link link) {
   /* If the list is empty */
   if(list->rear == NULL) {
     list->rear = link;
-    link->next = link;
-
+    link->next = list->rear;
     return 0;
   }
+
+
+  if(link_eq(list->rear->next, list->rear)) {
+    list->rear->next = link;
+    link->next = list->rear;
+    return 0;
+  } 
 
   /* Else the list is non-empty */
   bo_link tmp = list->rear->next;
@@ -77,7 +83,7 @@ int list_rr(bo_list list) {
   if(link_eq(list->rear, list->rear->next)) {
     link_dec(list->rear);
     list->rear = NULL;
-    
+
     return 0;
   }
 
@@ -91,12 +97,17 @@ int list_rr(bo_list list) {
   while(!insert) {
     /* If previous is not null, and we have the rear pointer */
     if(link_eq(curr, list->rear) && prev != NULL) {
-      prev->next = curr->next;
+      prev->next = list->rear->next;
+      list->rear = prev;
       link_dec(curr);
-      
-      insert = TRUE;
+     
+      return 0;
     } else {
       /* Else iterate to the next item in the list */
+      //printf("infinite loop?\n");
+      //printf("Current %s\n", curr->order->title);
+      print_list(list);
+
       prev = curr;
       curr = curr->next;
     }
@@ -106,9 +117,29 @@ int list_rr(bo_list list) {
 }
 
 int link_eq(bo_link l1, bo_link l2) {
-  if(l1 == l2) {
-    return TRUE;
-  } else {
-    return FALSE;
-  }
+  return bo_eq(l1->order, l2->order);
 }
+
+
+void print_list(bo_list list) {
+  if(list == NULL) {
+    printf("Empty List!\n");
+    return;
+  }
+
+  if(list->rear == NULL) {
+    printf("No Rear!\n");
+    return;
+  }
+
+
+  bo_link rear = list->rear;
+  bo_link curr = rear;
+  do {
+    printf("-->Link %s %d", curr->order->title, curr->order->id);
+    curr = curr->next;
+  } while(!link_eq(rear, curr));
+  printf("\n");
+
+}
+

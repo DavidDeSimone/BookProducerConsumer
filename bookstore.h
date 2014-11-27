@@ -25,7 +25,7 @@ void* process(void *arg);
  */
 
 /* Given a producer with a non-null category list, spawns a consumer object for each category */
-consumer* spawn_consumers(producer prod);
+consumer* spawn_consumers(producer prod, cus_array customers);
 
 /* Reads the book list associated with the passed producer object
  * Parses input file line by line, and adds each order to corresponding
@@ -33,5 +33,9 @@ consumer* spawn_consumers(producer prod);
  */
 void* read_data(void *producer);
 
+/* Writes order output for each customer in the customer array. See 
+ * readme.pdf for sample output
+ */
+void write_output(cus_array customers);
 
 #endif

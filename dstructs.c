@@ -4,7 +4,7 @@
 #include <string.h>
 
 //Possible TODO, check if id is unique?
-book_order bo_init(char *title, int id, char *category) {
+book_order bo_init(char *title, int id, char *category, double cost) {
   if(title == NULL || category == NULL) {
     return NULL;
   }
@@ -24,6 +24,9 @@ book_order bo_init(char *title, int id, char *category) {
 
   /* Set the ID */
   bo->id = id;
+
+  /* Set the cost of the order */
+  bo->cost = cost;
 
   return bo;
  
@@ -51,6 +54,17 @@ customer cu_init(char *name, int id, double c_limit) {
   cu->id = id;
   cu->c_limit = c_limit;
 
+  /* Initalize the amount spent to 0*/
+  cu->spent = 0;
+
+  /* Initalize compelted order array */
+  cu->comp_orders = str_array_init();
+  cu->rej_orders = str_array_init();
+
+  /* Create the mutex for this object */
+  pthread_mutex_init(&cu->mutex, 0);
+
+
   return cu;
 }
 
@@ -58,7 +72,8 @@ void cu_dec(customer cus) {
   if(cus == NULL) {
     return;
   }
-  
+
+  pthread_mutex_destroy(&cus->mutex);
   free(cus->name);
   free(cus);
 }
@@ -71,6 +86,8 @@ producer pro_init(str_array array) {
   pro->q_enum = array;
   pro->num_consumers = array->count;
   pro->book_input = NULL;
+  pro->consumers = NULL;
+
 
   /* Create an empty queue for each category */
   bo_queue *queues = malloc(sizeof(bo_queue) * pro->num_consumers);
@@ -84,6 +101,7 @@ producer pro_init(str_array array) {
   /* Initalize empty array of pthread types */
   pthread_t *tids = malloc(pro->num_consumers * sizeof(pthread_t));
   pro->tids = tids;
+
 
   return pro;
 }
@@ -100,9 +118,11 @@ void pro_dec(producer pro) {
   free(pro);
 }
 
-consumer con_init(str_array cats, char *category, bo_queue queue) {
+consumer con_init(str_array cats, char *category, bo_queue queue, cus_array customers) {
   consumer con = malloc(sizeof(struct consumer));
   int cat_id = -1;
+
+  con->isopen = 1;
 
   /* Copy the category name */
   char *cat_cpy = malloc((strlen(category) + 1) * sizeof(char));
@@ -117,10 +137,13 @@ consumer con_init(str_array cats, char *category, bo_queue queue) {
 
   /* Set the queue */
   con->queue = queue;
-  
-  /* Initalize the string array lists */
-  con->comp_orders = str_array_init();
-  con->rej_orders = str_array_init();
+ 
+  /* Set the customer list */
+  con->customers = customers;
+
+  /* Initalize the conditional variable */
+  pthread_cond_init(&con->data_available, 0);
+  pthread_mutex_init(&con->mutex, 0);
 
   return con;
 }
@@ -142,7 +165,7 @@ int get_catid(str_array cats, char *category) {
   }
 
   for(i = 0; i < cats->count; i++) {
-    if(strcmp(category, cats->strs[i]) == 0) {
+    if(strcmp(category, str_array_get(cats, i)) == 0) {
       return i;
     }
   }
@@ -164,3 +187,36 @@ int set_bookdb(producer prod, char *book_db) {
   return 0;
 }
 
+int spend(customer cu, double charge) {
+  if(cu == NULL) {
+    return -1;
+  }
+
+  int ret = 0;
+  pthread_mutex_lock(&cu->mutex);
+  if(charge + cu->spent < cu->c_limit) {
+    cu->spent += charge;
+    ret = CHARGE_SUC;
+  } else {
+    ret = OVERSPEND;
+  }
+  pthread_mutex_unlock(&cu->mutex);
+  
+  return ret;
+
+}
+
+int bo_eq(book_order o1, book_order o2) {
+  if(o1 == NULL || o2 == NULL) {
+    return FALSE;
+  }
+
+  //printf("\n%d, %d\n", o1->id, o2->id);
+  //printf("\n%s, %s\n", o1->title, o2->title);
+
+  if(strcmp(o1->title, o2->title) == 0 && o1->id == o2->id) {
+    return TRUE;
+  }
+
+  return FALSE;
+}

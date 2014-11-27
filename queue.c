@@ -54,15 +54,19 @@ book_order dequeue(bo_queue queue) {
   pthread_mutex_lock(&queue->mutex);
 
   /* Dequeue item from the list, if is not empty */
-  if(is_empty(queue) == TRUE) {
+  if(queue->size == 0) {
+    pthread_mutex_unlock(&queue->mutex);
     return NULL;
   }
 
   /* Get the current rear of the list */
   /* Remove the rear from the current list */
   book_order order = queue->list->rear->order;
-  list_rr(queue->list);
-  queue->size--;
+  
+  if(order != NULL) {
+    list_rr(queue->list);
+    queue->size -= 1;
+  }
 
   /* Unlock the queue */
   pthread_mutex_unlock(&queue->mutex);
@@ -91,4 +95,24 @@ size_t get_size(bo_queue queue) {
   pthread_mutex_unlock(&queue->mutex);
 
   return size;
+}
+
+int is_full(bo_queue queue) {
+  if(queue == NULL) {
+    return FALSE;
+  }
+
+  int ret = FALSE;
+
+  pthread_mutex_lock(&queue->mutex);
+  size_t size = queue->size;
+  size_t max = queue->max_size;
+  if(size == max) {
+    ret = TRUE;
+  } else {
+    ret = FALSE;
+  }
+  pthread_mutex_unlock(&queue->mutex);
+
+  return ret;
 }

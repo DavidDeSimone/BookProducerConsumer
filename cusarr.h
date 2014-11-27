@@ -7,6 +7,7 @@
 #include <string.h>
 #include <pthread.h>
 
+typedef struct customer* customer;
 
 struct cus_array {
   customer *array;
