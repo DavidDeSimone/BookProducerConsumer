@@ -11,13 +11,12 @@
 #define FALSE 0
 #define DEFAULT_LIMIT 5000
 
-typedef struct book_order* book_order;
-typedef struct bo_list* bo_list;
+typedef struct book_order* book_order_p;
 
 /* Queue data structure for a catagory of book orders */
 /* Queue is currently implemented with a circular linked list */
 struct bo_queue {
-  bo_list list;
+  struct bo_list *list;
   size_t size;
   size_t max_size;
 
@@ -38,12 +37,12 @@ void bo_queue_dec(bo_queue queue);
 
 /* Adds a book order to the back of the queue
  */
-void enqueue(bo_queue queue, book_order order);
+void enqueue(bo_queue queue, book_order_p order);
 
 /* Removes a book order from the front of the queue
  * and returns it. Returns NULL if queue is empty
  */
-book_order dequeue(bo_queue queue);
+book_order_p dequeue(bo_queue queue);
 
 /* Functions that checks if the given queue is empty,
  * Returns 1 if empty, 0 otherwise

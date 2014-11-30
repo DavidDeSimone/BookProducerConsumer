@@ -13,7 +13,6 @@
 #define OVERSPEND -3
 #define CHARGE_SUC 0
 
-typedef struct cus_array* cus_array;
 /* Struct representing a book order.
  */
 struct book_order {
@@ -67,7 +66,7 @@ struct consumer {
   int cat_id;
   int isopen;
 
-  cus_array customers;
+  struct cus_array *customers;
 
   pthread_cond_t data_available;
   pthread_mutex_t mutex;
@@ -79,7 +78,7 @@ typedef struct consumer* consumer;
 book_order bo_init(char *title, int id, char *category, double cost);
 customer cu_init(char *name, int id, double c_limit);
 producer pro_init(str_array q_enum);
-consumer con_init(str_array cats, char *category, struct bo_queue *queue, cus_array customers);
+consumer con_init(str_array cats, char *category, struct bo_queue *queue, struct cus_array *customers);
 
 /* Struct deconstructors */
 void bo_dec(book_order order);
