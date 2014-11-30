@@ -9,12 +9,13 @@
 
 #define TRUE 1
 #define FALSE 0
-#define DEFAULT_LIMIT 1500
+#define DEFAULT_LIMIT 5000
 
 typedef struct book_order* book_order;
 typedef struct bo_list* bo_list;
 
 /* Queue data structure for a catagory of book orders */
+/* Queue is currently implemented with a circular linked list */
 struct bo_queue {
   bo_list list;
   size_t size;
@@ -49,6 +50,8 @@ book_order dequeue(bo_queue queue);
  */
 int is_empty(bo_queue queue);
 
+/* Function determines if the current queue is at its limit 
+ */
 int is_full(bo_queue queue);
 
 /* Returns the current size of the queue */
