@@ -1,6 +1,5 @@
 #include "list.h"
 
-//TODO, copy book order list, dont keep reference here
 bo_link link_init(book_order order) { 
   bo_link link = malloc(sizeof(struct bo_link));
   link->order = order;
@@ -104,9 +103,9 @@ int list_rr(bo_list list) {
       return 0;
     } else {
       /* Else iterate to the next item in the list */
-      //printf("infinite loop?\n");
-      //printf("Current %s\n", curr->order->title);
+      #ifdef DEBUG
       print_list(list);
+      #endif
 
       prev = curr;
       curr = curr->next;

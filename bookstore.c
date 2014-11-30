@@ -147,9 +147,15 @@ void* process(void *cons) {
   while(con->isopen) {
 
     pthread_mutex_lock(&con->mutex);
+
+    printf("Thread %u awaiting data from consumer\n", (unsigned int)pthread_self());
     /* Wait for the consumer to alert you of an addition */
     pthread_cond_wait(&con->data_available, &con->mutex);
+    
+    /* If the producer has shut down this consumer, break */
     if(!con->isopen) break;
+
+    printf("Thread %u recv data, processing queue members\n", (unsigned int)pthread_self());
 
     while(!is_empty(con->queue)) {
       /* Take an object out from the queue */
@@ -169,20 +175,17 @@ void* process(void *cons) {
 	/* Process the object */
 	int result = spend(sucker, order->cost);
 	
-        #ifdef DEBUG
-	printf("Processed Order for %s by %s\n", sucker->name, order->title);
-        #endif
-
+	printf("Processed Order for %s by %u\n", sucker->name, (unsigned int)pthread_self());
 
 	/* Update customer record for this transaction */
-
+	/* If a charge is successful, print a string formatted that describes its title, cost, and amount spent so far */
+	/* Else, print the title and cost of the rejected order */
 	if(result == CHARGE_SUC) {
 	  double diff = sucker->c_limit - sucker->spent; 
 	  
 	  char zz[500];
 	  snprintf(zz, 500, "%s|%g|%g\n", order->title, order->cost, diff);
-       
-	  //printf("%s", dest);
+
 	  char *ptr = (char*)&zz;
 	  str_array_add(sucker->comp_orders, ptr);
 
@@ -197,7 +200,6 @@ void* process(void *cons) {
        
 
 	/* Go back to waiting for the producer*/
-
 	bo_dec(order);
     
       }

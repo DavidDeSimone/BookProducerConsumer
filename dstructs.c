@@ -179,6 +179,14 @@ int set_bookdb(producer prod, char *book_db) {
     return -1;
   }
 
+  /* Check to see if book_db is a file findable */
+  FILE *f = fopen(book_db, "r");
+  if(f == NULL) {
+    printf("Book Database not found!\n");
+    return -2;
+  }
+  fclose(f);
+
   char *cpy = malloc((strlen(book_db) + 1) * sizeof(char));
   strcpy(cpy, book_db);
 
