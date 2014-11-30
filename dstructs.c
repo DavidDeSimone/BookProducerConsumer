@@ -58,7 +58,7 @@ customer cu_init(char *name, int id, double c_limit) {
   cu->spent = 0;
 
   /* Signifies if the customer has an open order */
-  cu->open_order = 0;
+  cu->open_order = 1;
 
   /* Initalize compelted order array */
   cu->comp_orders = str_array_init();
@@ -193,9 +193,7 @@ void cu_set_open(customer cus, int set) {
     return;
   }
 
-  if(set != FALSE || set != TRUE) {
-    return;
-  }
+  printf("OPEN STATUS SET to %d\n", set);
 
   pthread_mutex_lock(&cus->mutex);
   cus->open_order = set;

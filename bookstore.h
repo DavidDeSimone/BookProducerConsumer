@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /* Reads in the category input file and constructs an array of category strings */
 str_array read_cats(char *cat_input);

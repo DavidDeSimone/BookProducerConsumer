@@ -4,7 +4,7 @@ Customer name: "Brian Russell"
 Customer id: 1
 Remaining credit balance after all purchases (a dollar amount): 336.13
 ### SUCCESSFUL ORDERS ###
-"I Could Pee on This: And Other Poems by Cats"|7.49|490.52
+"I Could Pee on This: And Other Poems by Cats"|7.49|492.51
 "Across Islands and Oceans"|1.99|490.52
 "The Handbuilt Home: 34 Simple Stylish and Budget-Friendly Woodworking Projects for Every Room"|15.63|474.89
 "Fifty Places to Dive Before You Die: Diving Experts Share the World's Greatest Destinations"|16.47|458.42
@@ -53,8 +53,8 @@ Customer id: 4
 Remaining credit balance after all purchases (a dollar amount): 9.11
 ### SUCCESSFUL ORDERS ###
 "The Immortal Life of Henrietta Lacks"|8.91|71.09
-"Stop Living In This Land. Go To The Everlasting World Of Happiness. Live There Forever."|7.19|63.9
-"Following Atticus (P.S.)"|2.99|60.91
+"Following Atticus (P.S.)"|2.99|68.1
+"Stop Living In This Land. Go To The Everlasting World Of Happiness. Live There Forever."|7.19|60.91
 "365 Cats 2013 Page-A-Day Calendar"|9.66|51.25
 "Thomas Jefferson: The Art of Power"|18.98|32.27
 "Origami Fun Kit for Beginners (Dover Fun Kit)"|10.17|22.1

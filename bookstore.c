@@ -204,7 +204,8 @@ void* process(void *cons) {
 
 	}
        
-	cu_set_open(sucker, FALSE);
+	cu_set_open(sucker, TRUE);
+	printf("Set Status to %d for customer %s\n", cu_get_open(sucker), sucker->name);
 	/* Go back to waiting for the producer*/
 	bo_dec(order);
     
@@ -285,32 +286,33 @@ void* read_data(void *produ) {
 
     /* If the consumers queue is not full, add to the queue and alert the consumer */
 
-    #ifdef DEBUG
-    //WARNING BAD
-    //ADD CLOSED CUSTOMERS TO QUEUE AND PROCESS FROM THAT IF NON EMPTY
+    /* As we have to act on customer orders in presented order, 
+     * we only act on customers with without "open" orders
+     * in the system
+     */
     customer cus = cus_get_byid(noted->customers, id);
-    if(cu_get_open(cus)) {
+    if(!cu_get_open(cus)) {
       while(TRUE) {
-	sleep(1);
-	if(!cu_get_open(cus)) break;
+	printf("Blocking on prod until queue opens for %s %s\n", cus->name, order->title);
+	usleep(1);
+	if(cu_get_open(cus)) break;
       }
     }
-
-    #endif
     
     bo_queue queue = noted->queue;
     if(!is_full(queue)) {
+      cu_set_open(cus, FALSE);
       enqueue(queue, order);
-      cu_set_open(cus, TRUE);
       //pthread_cond_signal(&noted->data_available);
       printf("Sending Signal...\n");
     } else {
       /* If the consumers queue IS full, wait some time and try to add it again */
       while(TRUE) {
-	sleep(1);
+	usleep(1);
 	if(!is_full(queue)) {
+	  cu_set_open(cus, FALSE);
 	  enqueue(queue, order);
-	  pthread_cond_signal(&noted->data_available);
+	  //pthread_cond_signal(&noted->data_available);
 	  break;
 	}
       }
