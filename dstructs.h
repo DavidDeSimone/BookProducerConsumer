@@ -30,6 +30,7 @@ struct customer {
   int id;
   double c_limit;
   double spent;
+  int open_order;
 
   str_array comp_orders;
   str_array rej_orders;
@@ -91,6 +92,24 @@ int pro_add_queue(producer pro, struct bo_queue *queue);
 
 /* Adds a category name to the category enumeration */
 int add_category(str_array cats, char *cat_name);
+
+/* Gets the current amount spent by a customer */
+double cu_get_spent(customer cus);
+
+/* Returns the difference between the customers credit limit and the amount spent */
+double cu_get_diff(customer cus);
+
+/* Gets the credit limit of the customer */
+double cu_get_climit(customer cus);
+
+/* Determines if a customer has an open order */
+int cu_get_open(customer cus);
+
+/* Sets the open order status of a customer. 
+ * Accepts only values TRUE and FALSE
+ */
+void cu_set_open(customer cus, int set);
+
 
 /* Searches for the category passed at category in the string array
  * If the string is found, returns the categories index

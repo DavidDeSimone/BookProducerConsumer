@@ -103,9 +103,7 @@ int list_rr(bo_list list) {
       return 0;
     } else {
       /* Else iterate to the next item in the list */
-      #ifdef DEBUG
       print_list(list);
-      #endif
 
       prev = curr;
       curr = curr->next;

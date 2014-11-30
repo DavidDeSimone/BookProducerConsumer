@@ -60,9 +60,7 @@ size_t cus_get_count(cus_array arr) {
   }
 
   pthread_mutex_lock(&arr->size_mutex);
-  
   toret = arr->count;
-
   pthread_mutex_unlock(&arr->size_mutex);
 
   return toret;

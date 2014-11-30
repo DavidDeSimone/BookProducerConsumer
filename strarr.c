@@ -87,7 +87,7 @@ int str_array_add(str_array arr, char *str) {
   strs[count] = cpy;
 
   /* Delete the old list */
-  //strs_dec(arr->strs, arr->count);
+  free(arr->strs);
 
   /* Update list in struct */
   arr->strs = strs;

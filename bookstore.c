@@ -39,7 +39,6 @@ str_array read_cats(char *cat_input) {
   return ret;
 }
 
-//TODO, don't add customers if they already have ID in DB
 cus_array read_cus(char *dbase_input) {
   FILE *input;
   char *line = NULL;
@@ -93,10 +92,17 @@ cus_array read_cus(char *dbase_input) {
     /* Create the customer object */
     customer to_add = cu_init(name, id, c_limit);
 
+    customer dummy = NULL;
+    /* If the customer is already in the database, reject */
+    if((dummy = cus_get_byid(ret, to_add->id)) != NULL) {
+      printf("Customer with duplicate ID added, rejecting!\n");
+      return NULL;
+    }
 
     #ifdef DEBUG
     printf("Added customer %s %d %d\n", name, id, c_limit);
     #endif
+
 
     /* Add it to the list */
     int i = 0;
@@ -148,21 +154,21 @@ void* process(void *cons) {
 
     pthread_mutex_lock(&con->mutex);
 
-    printf("Thread %u awaiting data from consumer\n", (unsigned int)pthread_self());
+    //printf("Thread %u awaiting data from consumer\n", (unsigned int)pthread_self());
     /* Wait for the consumer to alert you of an addition */
-    pthread_cond_wait(&con->data_available, &con->mutex);
+    //pthread_cond_wait(&con->data_available, &con->mutex);
     
     /* If the producer has shut down this consumer, break */
-    if(!con->isopen) break;
+    //if(!con->isopen) break;
 
-    printf("Thread %u recv data, processing queue members\n", (unsigned int)pthread_self());
+    //printf("Thread %u recv data, processing queue members\n", (unsigned int)pthread_self());
 
     while(!is_empty(con->queue)) {
       /* Take an object out from the queue */
       book_order order = dequeue(con->queue);
 
       #ifdef DEBUG
-      printf("Order Dequeued\n");
+      printf("Order Dequeued, Title: %s, ID: %d\n", order->title, order->id);
       #endif
 
       if(order != NULL) {
@@ -181,7 +187,7 @@ void* process(void *cons) {
 	/* If a charge is successful, print a string formatted that describes its title, cost, and amount spent so far */
 	/* Else, print the title and cost of the rejected order */
 	if(result == CHARGE_SUC) {
-	  double diff = sucker->c_limit - sucker->spent; 
+	  double diff = cu_get_diff(sucker); 
 	  
 	  char zz[500];
 	  snprintf(zz, 500, "%s|%g|%g\n", order->title, order->cost, diff);
@@ -198,7 +204,7 @@ void* process(void *cons) {
 
 	}
        
-
+	cu_set_open(sucker, FALSE);
 	/* Go back to waiting for the producer*/
 	bo_dec(order);
     
@@ -278,16 +284,30 @@ void* read_data(void *produ) {
     noted = prod->consumers[i];
 
     /* If the consumers queue is not full, add to the queue and alert the consumer */
-    //pthread_mutex_lock(&noted->mutex);
+
+    #ifdef DEBUG
+    //WARNING BAD
+    //ADD CLOSED CUSTOMERS TO QUEUE AND PROCESS FROM THAT IF NON EMPTY
+    customer cus = cus_get_byid(noted->customers, id);
+    if(cu_get_open(cus)) {
+      while(TRUE) {
+	sleep(1);
+	if(!cu_get_open(cus)) break;
+      }
+    }
+
+    #endif
+    
     bo_queue queue = noted->queue;
     if(!is_full(queue)) {
       enqueue(queue, order);
-      pthread_cond_signal(&noted->data_available);
+      cu_set_open(cus, TRUE);
+      //pthread_cond_signal(&noted->data_available);
       printf("Sending Signal...\n");
     } else {
       /* If the consumers queue IS full, wait some time and try to add it again */
       while(TRUE) {
-	sleep(5);
+	sleep(1);
 	if(!is_full(queue)) {
 	  enqueue(queue, order);
 	  pthread_cond_signal(&noted->data_available);
@@ -295,7 +315,7 @@ void* read_data(void *produ) {
 	}
       }
     }
-    //pthread_mutex_unlock(&noted->mutex);
+   
   }
  
 
@@ -312,20 +332,21 @@ void* read_data(void *produ) {
    */
   int j;
   double spent = 0;
+  customer cus = NULL;
   for(j = 0; j < prod->num_consumers; j++) {
-    pthread_cond_signal(&prod->consumers[j]->data_available);
     prod->consumers[j]->isopen = 0;
+    pthread_cond_signal(&prod->consumers[j]->data_available);
+    printf("Waiting on thread %u to exit\n", (unsigned int)prod->tids[j]);
     pthread_join(prod->tids[j], 0);
   }
 
   for(j = 0; j < prod->consumers[0]->customers->count; j++) {
-    spent += cus_get(prod->consumers[0]->customers, j)->spent;
+    cus = cus_get(prod->consumers[0]->customers, j);
+    spent += cu_get_spent(cus);
   }
-
 
   printf("Total amount earned for this round, %g\n", spent);
   write_output(prod->consumers[0]->customers);
-
 
   return NULL; 
 }
@@ -348,8 +369,8 @@ void write_output(cus_array customers) {
     fprintf(output, "### BALANCE ###\n");
     fprintf(output, "Customer name: %s\n", cus->name);
     fprintf(output, "Customer id: %d\n", cus->id);
-    double diff = cus->c_limit - cus->spent;
-    fprintf(output, "Redmaining credit balance after all purchases (a dollar amount): %g\n", diff);
+    double diff = cu_get_diff(cus);
+    fprintf(output, "Remaining credit balance after all purchases (a dollar amount): %g\n", diff);
 
     fprintf(output, "### SUCCESSFUL ORDERS ###\n");
     
@@ -364,6 +385,7 @@ void write_output(cus_array customers) {
       fprintf(output, "%s", str_array_get(cus->rej_orders, k));
     }
 
+    fprintf(output, "=== END CUSTOMER INFO ===\n");
     fprintf(output, "\n");
   }
 
